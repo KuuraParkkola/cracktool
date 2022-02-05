@@ -1,0 +1,11 @@
+.DS_Store
+config.json
+
+.venv
+__pycache__
+
+*.txt
+*.pyc
+*.log
+
+dev_*
