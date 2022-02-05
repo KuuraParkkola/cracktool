@@ -1,6 +1,5 @@
 import logging
 import sys
-from datetime import datetime
 from pathlib import Path
 from threading import Event
 from time import time
@@ -11,6 +10,7 @@ from CrackerCore.Hasher import Hasher
 from CrackerCore.WordSource import WordSource
 from CrackerCore.WorkerPool import WorkerPool
 from CrackerCore.utilities.pipeline import build_pipeline
+from CrackerCore.utilities.utility import export_results
 
 
 def cli(config: Dict) -> None:
@@ -50,22 +50,6 @@ def cli(config: Dict) -> None:
     except KeyboardInterrupt:
         logging.info("Process was aborted")
         worker_pool.stop()
-    time_elapsed = time() - start_time
 
-    matches = hasher.matches()
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file_name = f'output_{timestamp}.txt'
-    with (Path.cwd()/output_file_name).open('w') as out_fl:
-        out_fl.write(f'Cracking job run at {timestamp}:\n')
-        out_fl.write(f'Threads: {config["threads"]}\n')
-        out_fl.write(f'Dictionary: {config["dict"]["key"]}\n')
-        out_fl.write(f'Pipeline: {config["pipeline"]["variators"]}\n')
-        out_fl.write(f'Time: {time_elapsed:.2f}s\n\n')
-        
-        for hash_set in matches:
-            out_fl.write(f'{hash_set}\n')
-            for match in matches[hash_set]:
-                out_fl.write(f'\t{match[0]:30}: {match[1]}\n')
-            out_fl.write('\n')
-
+    output_file_name = export_results(config, hasher.matches, time()-start_time)
     logging.info(f'The process has been completed and results stored in file {output_file_name}')
