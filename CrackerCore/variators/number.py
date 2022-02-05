@@ -16,7 +16,7 @@ class NumberVariator(Variator):
         for source in sources:
             for appendix in self.__value_set:
                 result_set |= self.__appender(source, appendix)
-        self._int_then(result_set)
+        self._int_then(sources, result_set)
 
     @property
     def endpoint(self) -> Callable[[Set[bytes]], None]:
@@ -27,7 +27,7 @@ def build_numr_variator(args: List[str]) -> NumberVariator:
     num_range = tuple([int(v) for v in args[0].split(':')])
     order = 'post'
     if len(args) > 1:
-        order = args[1]
+        order = args[1][2:]
 
     return NumberVariator('range', num_range, order)
 
@@ -36,6 +36,6 @@ def build_numd_variator(args: List[str]) -> NumberVariator:
     digits = int(args[0])
     order = 'post'
     if len(args) > 1:
-        order = args[1]
+        order = args[1][2:]
 
     return NumberVariator('digits', digits, order)

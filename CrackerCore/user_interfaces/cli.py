@@ -1,7 +1,9 @@
 import logging
 import sys
+from datetime import datetime
 from pathlib import Path
-from threading import Timer, Event
+from threading import Event
+from time import time
 from typing import Dict
 
 from CrackerCore.HashGroup import HashGroup
@@ -36,19 +38,34 @@ def cli(config: Dict) -> None:
     worker_pool = WorkerPool(config['threads'], pipeline)
     logging.info(f'Created a worker pool with {config["threads"]} workers')
 
-    stop = Event()
-    def log_update():
-        while not stop.wait(timeout=10):
-            logging.info(f'Running hashes: {word_source.progress} words out of {word_source.length} tested, {word_source.words_left} left')
-    
-    def on_finish():
-        logging.info(f'Word source has been cleared and the program fill stop shortly')
-        stop.set()
-    word_source.notify_on_finished(on_finish)
-
-    logging.info('Setup progress tracker and exit handling')
-
+    start_time = time()
     worker_pool.start()
-    log_update()
 
-    logging.info('The process has finished')
+    try:
+        stop = Event()
+        while not stop.wait(timeout=5):
+            logging.info(f'Running hashes: {word_source.progress} words out of {word_source.length} tested, {word_source.words_left} left. Recent word: {hasher.recent_word}')
+            if not word_source.words_left:
+                stop.set()
+    except KeyboardInterrupt:
+        logging.info("Process was aborted")
+        worker_pool.stop()
+    time_elapsed = time() - start_time
+
+    matches = hasher.matches()
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file_name = f'output_{timestamp}.txt'
+    with (Path.cwd()/output_file_name).open('w') as out_fl:
+        out_fl.write(f'Cracking job run at {timestamp}:\n')
+        out_fl.write(f'Threads: {config["threads"]}\n')
+        out_fl.write(f'Dictionary: {config["dict"]["key"]}\n')
+        out_fl.write(f'Pipeline: {config["pipeline"]["variators"]}\n')
+        out_fl.write(f'Time: {time_elapsed:.2f}s\n\n')
+        
+        for hash_set in matches:
+            out_fl.write(f'{hash_set}\n')
+            for match in matches[hash_set]:
+                out_fl.write(f'\t{match[0]:30}: {match[1]}\n')
+            out_fl.write('\n')
+
+    logging.info(f'The process has been completed and results stored in file {output_file_name}')

@@ -19,8 +19,6 @@ class WordSource:
         self.__wordcount = len(self.__wordlist)
         self.__left = self.__wordcount
         self.__progress = 0
-        self.__finished = False
-        self.__on_finished: Optional[Callable[[], None]] = None
 
     def push(self, count: int) -> None:
         if self.__left <= 0:
@@ -36,9 +34,6 @@ class WordSource:
                 batch |= set(self.__wordlist[self.__progress:])
                 self.__left = 0
                 self.__progress = self.__wordcount
-                if self.__on_finished is not None and not self.__finished:
-                    self.__on_finished()
-                self.__finished = True
             self.__lock.release()
         else:
             raise TryAgain('Could not ackquire a lock')
@@ -53,9 +48,6 @@ class WordSource:
 
     def use_hasher(self, hasher: Hasher) -> None:
         self.__hasher = hasher
-
-    def notify_on_finished(self, callback: Callable[[], None]) -> None:
-        self.__on_finished = callback
 
     @property
     def length(self):

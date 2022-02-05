@@ -15,7 +15,7 @@ class SymbolVariator(Variator):
         for source in sources:
             for appendix in self.__symbol_set:
                 result_set |= self.__appender(source, appendix)
-        self._int_then(result_set)
+        self._int_then(sources, result_set)
 
     @property
     def endpoint(self) -> Callable[[Set[bytes]], None]:

@@ -5,7 +5,7 @@ from CrackerCore.variators.symbol import build_sym_variator
 from CrackerCore.variators.substitution import build_subs_variator
 from CrackerCore.variators.number import build_numr_variator
 from CrackerCore.variators.number import build_numd_variator
-#from CrackerCore.variators.capital import build_caps_variator
+from CrackerCore.variators.capital import build_caps_variator
 
 
 def build_pipeline(word_source: WordSource, pipeline_args: Dict, hasher: Hasher):
@@ -14,6 +14,7 @@ def build_pipeline(word_source: WordSource, pipeline_args: Dict, hasher: Hasher)
         'subs': build_subs_variator,
         'numr': build_numr_variator,
         'numd': build_numd_variator,
+        'caps': build_caps_variator
     }
 
     pipeline = [word_source]

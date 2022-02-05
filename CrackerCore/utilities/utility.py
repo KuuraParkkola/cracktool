@@ -1,11 +1,9 @@
-from typing import Any, Callable, List, Set, Union
+from typing import List, Set, Union
 
 
-def encoded_arg(source: str) -> bytes:
-    try:
-        return source.encode('utf8')
-    except UnicodeError:
-        raise TypeError('All characters should be utf-8 compatible')
+def capitalize(source: bytes, idx: int) -> bytes:
+    nxt = idx+1
+    return source[:idx] + source[idx:nxt if nxt else None].upper() + (source[nxt:] if nxt else b'')
 
 
 def flatten_nested_list(tree: Union[List, str]) -> List[str]:
@@ -45,12 +43,3 @@ def select_appender(order: str):
            prefix_appender if order == 'pre' else \
            both_appender if order == 'both' else \
            None
-
-def variable_arg(*arg_type) -> Callable[[str], Any]:
-    def converter(args: str) -> Any:
-        parsed = []
-        for arg_idx in range(len(args)):
-            parsed.append(arg_type[arg_idx](args[arg_idx]))
-        return tuple(parsed)
-    
-    return converter

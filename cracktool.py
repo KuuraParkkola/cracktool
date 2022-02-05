@@ -97,8 +97,11 @@ if __name__ == '__main__':
     #
     # Configure logging
     #
+    log_dir = Path.cwd()/'logs'
+    if not log_dir.exists():
+        log_dir.mkdir(parents=True)
     logFormatter = logging.Formatter('%(asctime)s [%(threadName)-9s] %(message)s')
-    fileLogger = logging.FileHandler(Path.cwd()/'logs'/f'cracktool_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
+    fileLogger = logging.FileHandler(log_dir/f'cracktool_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
     fileLogger.setFormatter(logFormatter)
     logging.getLogger().addHandler(fileLogger)
     logging.getLogger().setLevel(logging.INFO)

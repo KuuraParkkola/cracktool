@@ -15,11 +15,11 @@ class Variator:
     def use_variator(self, variator: Variator) -> None:
         self.__next_variator = variator
 
-    def _int_then(self, words: Set[bytes]) -> None:
+    def _int_then(self, sources: Set[bytes], words: Set[bytes]) -> None:
         if self.__hasher is not None:
             self.__hasher.check(words)
         if self.__next_variator is not None:
-            self.__next_variator.endpoint(words)
+            self.__next_variator.endpoint(sources | words)
 
     @property
     def endpoint(self) -> Callable[[Set[bytes]], None]:

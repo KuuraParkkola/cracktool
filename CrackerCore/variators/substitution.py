@@ -20,6 +20,7 @@ class SubstitutionVariator(Variator):
     }
 
     def __init__(self, symbols: str, greedy: bool = False) -> None:
+        super().__init__()
         self.__substitutes = [self.__substitutionTable[s] for s in symbols]
         self.__greedy = greedy
 
@@ -51,7 +52,7 @@ class SubstitutionVariator(Variator):
         while len(new_substituted) > 0:
             result_set |= new_substituted
             new_substituted = self.__int_default_substitutor(new_substituted)
-        self._int_then(result_set)
+        self._int_then(sources, result_set)
 
     def __int_greedy_substitutor(self, sources: Set[bytes]) -> Set[bytes]:
         output_set = set()
@@ -70,7 +71,7 @@ class SubstitutionVariator(Variator):
         while len(new_substituted) > 0:
             result_set |= new_substituted
             new_substituted = self.__int_greedy_substitutor(new_substituted)
-        self._int_then(result_set)
+        self._int_then(sources, result_set)
 
     @property
     def endpoint(self) -> Callable[[Set[bytes]], None]:
