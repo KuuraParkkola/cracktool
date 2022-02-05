@@ -1,10 +1,10 @@
 import logging
+from multiprocessing import Event
 from pathlib import Path
-from threading import Event
 from time import time
 from typing import Dict, List
 
-from rich.console import Console
+from rich.columns import Columns
 from rich.live import Live
 from rich.panel import Panel
 from rich.progress import Progress
@@ -12,17 +12,15 @@ from rich.table import Table
 
 from CrackerCore.HashGroup import HashGroup
 from CrackerCore.Hasher import Hasher
-from CrackerCore.WordSource import WordSource
-from CrackerCore.WorkerPool import WorkerPool
 from CrackerCore.utilities.pipeline import build_pipeline
 from CrackerCore.utilities.utility import export_results
+from CrackerCore.WordSource import WordSource
+from CrackerCore.WorkerPool import WorkerPool
 
 
 def build_recent_words_table(words: List[str]):
-    recent_words_grid = Table.grid()
-    for word in words:
-        recent_words_grid.add_column(word)
-    return recent_words_grid
+    columns = Columns(words, equal=True, expand=True)
+    return columns
 
 
 def build_worker_table(worker_pool: WorkerPool):
@@ -48,7 +46,7 @@ def build_worker_table(worker_pool: WorkerPool):
 def build_match_table(hasher: Hasher):
     match_table = Table()
 
-    matches = hasher.matches
+    matches = hasher.matches()
     for hash_set in matches:
         match_table.add_column(hash_set)
     match_table.add_row(*['\n'.join([match[0] for match in matches[hash_set]]) for hash_set in matches])
@@ -59,14 +57,15 @@ def build_match_table(hasher: Hasher):
 def build_ui(progress, wordlist, worker_table, match_table):
     progress_grid = Table.grid()
     progress_grid.add_row(progress)
-    progress_grid.add_row(wordlist)
     progress_grid.add_row(worker_table)
 
-    progress_panel = Panel.fit(progress_grid, title="Progress", border_style="green", padding=(1, 1))
-    match_panel = Panel.fit(match_table, title="Matches", border_style="cyan", padding=(1, 1))
+    progress_panel = Panel.fit(progress_grid, title="Progress", border_style="green", padding=(1, 1), width=70)
+    words_panel = Panel.fit(wordlist, title="Recent Words", border_style="yellow", padding=(1, 1), width=70)
+    match_panel = Panel.fit(match_table, title="Matches", border_style="cyan", padding=(1, 1), width=70)
 
     main_layout = Table.grid()
     main_layout.add_row(progress_panel)
+    main_layout.add_row(words_panel)
     main_layout.add_row(match_panel)
 
     return main_layout
@@ -94,26 +93,30 @@ def tui(config: Dict) -> None:
     progress = Progress()
     main_task = progress.add_task("Words processed:", total=word_source.length)
 
-
-
     start_time = time()
     worker_pool.start()
 
-    recent_words = []
+    recent_words = ['', '', '']
     dyn_ui = lambda: build_ui(progress, build_recent_words_table(recent_words), build_worker_table(worker_pool), build_match_table(hasher))
     with Live(dyn_ui(), refresh_per_second=1) as live:
         try:
-            while not progress.finished:
+            ui = dyn_ui()
+            event = Event()
+            while not event.wait(timeout=1):
+                recent_words.insert(0, hasher.recent_word)
+                recent_words.pop(-1)
+                
                 progress.update(main_task, completed=word_source.progress)
-                recent_words = recent_words[:2] + hasher.recent_word
-                live.update(dyn_ui())
+                live.update(ui)
+                ui = dyn_ui()
 
                 if not word_source.words_left:
                     progress.update(main_task, completed=word_source.length)
+                    event.set()
 
         except KeyboardInterrupt:
             logging.info("Process was aborted")
             worker_pool.stop()
 
-    output_file_name = export_results(config, hasher.matches, time()-start_time)
+    output_file_name = export_results(config, hasher.matches(), time()-start_time)
     logging.info(f'The process has been completed and results stored in file {output_file_name}')

@@ -32,7 +32,7 @@ class Worker:
 
     @property
     def name(self) -> str:
-        return self.__status
+        return self.__name
 
     @property
     def status(self) -> str:
@@ -40,7 +40,7 @@ class Worker:
 
     @property
     def processed(self) -> str:
-        return self.__status
+        return self.__processed
 
     def start(self) -> None:
         self.__active = True
