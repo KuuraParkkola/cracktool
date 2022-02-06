@@ -18,8 +18,11 @@ class Worker:
     def __run(self) -> None:
         self.__status = 'Running'
         logging.info('Workloop was started')
+
+        # While running:
         while self.__active:
             try:
+                # Make the word source push guesses into the processing pipeline
                 self.__word_source.push(100)
                 self.__processed += 100
             except TryAgain:
@@ -52,10 +55,12 @@ class Worker:
 
 class WorkerPool:
     def __init__(self, threads: int, word_source: WordSource) -> None:
+        # Create a number of workers
         self.__workers = [Worker(f'Worker {w}', word_source) for w in range(1, threads+1)]
 
     @property
     def workers(self) -> Tuple[Tuple[str, str, str]]:
+        # Get some status information from the worker threads
         return ((w.name, w.status, w.processed) for w in self.__workers)
 
     def start(self):

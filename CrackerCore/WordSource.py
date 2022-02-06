@@ -13,6 +13,7 @@ class WordSource:
         self.__hasher: Optional[Hasher] = None
         self.__lock = Lock()
 
+        # Load a dictionary
         with path.open('r') as word_file:
             self.__wordlist = word_file.read().encode('utf8').splitlines()
 
@@ -24,6 +25,7 @@ class WordSource:
         if self.__left <= 0:
             raise WordSourceEmpty()
 
+        # Load a set of guesses
         batch = set()
         if self.__lock.acquire(blocking=True, timeout=1):
             if count < self.__left:
@@ -38,15 +40,18 @@ class WordSource:
         else:
             raise TryAgain('Could not ackquire a lock')
         
+        # Push the guesses into the pipeline
         if self.__hasher is not None:
             self.__hasher.check(batch)
         if self.__variator is not None:
             self.__variator.endpoint(batch)
 
     def use_variator(self, variator: Variator) -> None:
+        # Send all outputs to a variator
         self.__variator = variator
 
     def use_hasher(self, hasher: Hasher) -> None:
+        # Send all outputs to a hasher
         self.__hasher = hasher
 
     @property

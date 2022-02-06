@@ -7,11 +7,14 @@ from CrackerCore.variators.Variator import Variator
 class SymbolVariator(Variator):
     def __init__(self, count: int, symbols: bytes, order: str = 'post') -> None:
         super().__init__()
+        # Precompute all pre-/postfixes
         self.__symbol_set = generate_sequences(count, symbols)
+        # Select the concatenation order
         self.__appender = select_appender(order)
 
     def __endpoint(self, sources: Set[bytes]) -> None:
         result_set = set()
+        # Apply each pre-/postfix
         for source in sources:
             for appendix in self.__symbol_set:
                 result_set |= self.__appender(source, appendix)
@@ -23,6 +26,8 @@ class SymbolVariator(Variator):
 
 
 def build_sym_variator(args: List[str]) -> SymbolVariator:
+    # Parse variator arguments and build the variator
+
     count = int(args[0])
     symbols = b'!@#$%^&*|_-:;"\'.,+?'
     order = 'post'

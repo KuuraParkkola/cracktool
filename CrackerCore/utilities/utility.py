@@ -4,11 +4,13 @@ from typing import Dict, List, Set, Tuple, Union
 
 
 def capitalize(source: bytes, idx: int) -> bytes:
+    # Capitalize the word at the given index
     nxt = idx+1
     return source[:idx] + source[idx:nxt if nxt else None].upper() + (source[nxt:] if nxt else b'')
 
 
 def export_results(config: Dict, matches: Dict[str, Tuple[Tuple[str, str]]], time_elapsed: float) -> None:
+    # Export password matches in a file
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file_name = f'output_{timestamp}.txt'
     with (Path.cwd()/output_file_name).open('w') as out_fl:
@@ -28,6 +30,8 @@ def export_results(config: Dict, matches: Dict[str, Tuple[Tuple[str, str]]], tim
 
 
 def flatten_nested_list(tree: Union[List, str]) -> List[str]:
+    # Make the processing of nested lists easier
+    # Mainly used to parse the pipeline arguments if given with multiple -p tags
     if isinstance(tree, str):
         return [tree]
     else:
@@ -38,10 +42,13 @@ def flatten_nested_list(tree: Union[List, str]) -> List[str]:
 
 
 def generate_range(start: int, stop: int) -> List[bytes]:
+    # Generate a range of number pre-/postfixes
     return [str(v).encode('utf8') for v in range(start, stop+1)]
 
 
 def generate_sequences(count: int, symbols: bytes) -> List[bytes]:
+    # Generate a range of symbol pre-/postfixes
+    # Used for the generation of digits as well
     sequences = []
     for _ in range(count):
         new_seq = []
@@ -87,6 +94,8 @@ def print_pipeline_help(variators: List[str]) -> None:
 
 
 def select_appender(order: str):
+    # To optimize performance the order parameter for variators is applied
+    # when the component is built rather than in real time
     def postfix_appender(source: bytes, appendix: bytes) -> Set[bytes]:
         return set([source + appendix])
     def prefix_appender(source: bytes, appendix: bytes) -> Set[bytes]:

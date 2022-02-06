@@ -21,14 +21,18 @@ class SubstitutionVariator(Variator):
 
     def __init__(self, symbols: str, greedy: bool = False) -> None:
         super().__init__()
+        # Select the symbols to substitute
         self.__substitutes = [self.__substitutionTable[s] for s in symbols]
-        self.__greedy = greedy
+        # Select the active endpoint
+        self.__endpoint = self.__greedy_endpoint if greedy else self.__default_endpoint
 
     @staticmethod
     def __int_default_substitutor_substitutor(source: bytes, symbol: bytes, substitute: bytes) -> Set[bytes]:
         output_set = set()
 
         pos = source.find(symbol)
+        
+        # Substitute each symbol
         while pos > 0:
             new_source = source[0:pos] + substitute + source[pos+1:]
             output_set |= SubstitutionVariator.__int_default_substitutor_substitutor(new_source, symbol, substitute)
@@ -39,7 +43,8 @@ class SubstitutionVariator(Variator):
 
     def __int_default_substitutor(self, sources: Set[bytes]) -> Set[bytes]:
         output_set = set()
-
+        
+        # Make one round of substitutions over and over again for as long as there are symbols to substitute
         for word in sources:
             for substitute in self.__substitutes:
                 output_set |= SubstitutionVariator.__int_default_substitutor_substitutor(word, substitute[0], substitute[1])
@@ -48,6 +53,8 @@ class SubstitutionVariator(Variator):
 
     def __default_endpoint(self, sources: Set[bytes]) -> None:
         result_set = set()
+        
+        # Make one round of substitutions over and over again for as long as there are symbols to substitute
         new_substituted = self.__int_default_substitutor(sources)
         while len(new_substituted) > 0:
             result_set |= new_substituted
@@ -56,7 +63,8 @@ class SubstitutionVariator(Variator):
 
     def __int_greedy_substitutor(self, sources: Set[bytes]) -> Set[bytes]:
         output_set = set()
-
+        
+        # Substitute all occurences of each symbol
         for word in sources:
             for substitute in self.__substitutes:
                 symbol = substitute[0]
@@ -67,6 +75,8 @@ class SubstitutionVariator(Variator):
 
     def __greedy_endpoint(self, sources: Set[bytes]) -> None:
         result_set = set()
+    
+        # Make one round of substitutions over and over again for as long as there are symbols to substitute
         new_substituted = self.__int_greedy_substitutor(sources)
         while len(new_substituted) > 0:
             result_set |= new_substituted
@@ -75,10 +85,12 @@ class SubstitutionVariator(Variator):
 
     @property
     def endpoint(self) -> Callable[[Set[bytes]], None]:
-        return self.__greedy_endpoint if self.__greedy else self.__default_endpoint
+        return self.__endpoint
 
 
 def build_subs_variator(args: List[str]) -> SubstitutionVariator:
+    # Parse variator arguments and build the variator
+
     symbols = b'$@!013456789'
     greedy = False
 
