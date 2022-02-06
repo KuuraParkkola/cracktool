@@ -75,41 +75,59 @@ def tui(config: Dict) -> None:
     hasher = Hasher('sha1')
     logging.info(f'Created a hasher')
 
+    #
+    # Load hashes to crack
     for hash_set in filter(lambda e: e['key'] in config['selected_hash_sets'], config['hash_sets']):
         new_hash_set = HashGroup(hash_set['title'], Path(hash_set['path']))
         new_hash_set.notify_on_match(lambda set_name, pw, pw_hash: logging.info(f'A match was registered in {set_name}: {pw} - {pw_hash}'))
         hasher.add_group(new_hash_set)
         logging.info(f'Enabled hash set {new_hash_set.title}')
-
+    
+    #
+    # Load the dictionary
     word_source = WordSource(Path(config['dict']['path']))
     logging.info(f'Created word source {config["dict"]["key"]} with {word_source.length} words')
 
+    #
+    # Setup variators to generate variations of the dictionary words
     pipeline = build_pipeline(word_source, config['pipeline'], hasher)
     logging.info(f'Created a pipeline with arguments {config["pipeline"]["variators"]}')
 
+    #
+    # Setup multithreading
     worker_pool = WorkerPool(config['threads'], pipeline)
     logging.info(f'Created a worker pool with {config["threads"]} workers')
 
+    #
+    # Create some ui resources
     progress = Progress()
     main_task = progress.add_task("Words processed:", total=word_source.length)
+    recent_words = ['' for _ in range(9)]
+    dyn_ui = lambda: build_ui(progress, build_recent_words_table(recent_words), build_worker_table(worker_pool), build_match_table(hasher))
 
+    #
+    # Start the process
     start_time = time()
     worker_pool.start()
 
-    recent_words = ['' for _ in range(9)]
-    dyn_ui = lambda: build_ui(progress, build_recent_words_table(recent_words), build_worker_table(worker_pool), build_match_table(hasher))
+    #
+    # Keep updating the ui while there still are words to process
     with Live(dyn_ui(), refresh_per_second=1) as live:
         try:
-            ui = dyn_ui()
             event = Event()
             while not event.wait(timeout=1):
+                # rebuild the ui
+                ui = dyn_ui()
+
+                # Update the list of recently checked passwords
                 recent_words.insert(0, hasher.recent_word)
                 recent_words.pop(-1)
                 
+                # Update the ui
                 progress.update(main_task, completed=word_source.progress)
                 live.update(ui)
-                ui = dyn_ui()
-
+                
+                # Check whether the process has finished
                 if not word_source.words_left:
                     progress.update(main_task, completed=word_source.length)
                     event.set()
@@ -118,5 +136,7 @@ def tui(config: Dict) -> None:
             logging.info("Process was aborted")
             worker_pool.stop()
 
+    #
+    # Export the discovered hashes
     output_file_name = export_results(config, hasher.matches(), time()-start_time)
     logging.info(f'The process has been completed and results stored in file {output_file_name}')

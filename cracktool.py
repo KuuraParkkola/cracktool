@@ -51,6 +51,7 @@ if __name__ == '__main__':
     #
     args = parser.parse_args()
 
+    # Print help for the variator arguments
     if args.pipeline_help:
         print_pipeline_help(args.pipeline_help)
         exit(0)

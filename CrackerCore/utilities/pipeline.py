@@ -17,12 +17,15 @@ def build_pipeline(word_source: WordSource, pipeline_args: Dict, hasher: Hasher)
         'caps': build_caps_variator
     }
 
+    # Create a pipeline starting from the word source passing through each variator
     pipeline = [word_source]
     pipeline.extend([vari_map[vari[0]](vari[1:]) for vari in pipeline_args['variators']])
 
+    # Chain the variator together
     for idx in range(len(pipeline) - 1):
         pipeline[idx].use_variator(pipeline[idx+1])
 
+    # Select cariators that send their results to the hasher
     hash_sources = pipeline_args['hash_sources']
     for idx in range(len(pipeline)):
         if idx in hash_sources:
