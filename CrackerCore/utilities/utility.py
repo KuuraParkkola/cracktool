@@ -52,6 +52,40 @@ def generate_sequences(count: int, symbols: bytes) -> List[bytes]:
     return sequences
 
 
+def print_pipeline_help(variators: List[str]) -> None:
+        print('Variator help:\n')
+        for variator in variators:
+            if variator == 'sym':
+                print('sym $count s=$syms o=$ord')
+                print('Prepend and/or append symbols')
+                print('\tcount               : How many symbols to append')
+                print('\tsyms                : The set of symbols to use (optional)')
+                print('\tord (pre|post|both) : Whether to prepend, append or both (optional)')
+            elif variator == 'subs':
+                print('subs $count s=$syms o=$ord')
+                print('Replace characters with symbols')
+                print('\tsyms                : The set of symbols to replace (optional)')
+                print('\tgreedy              : Replace all occurences of the symbols rather than all combinations (optional)')
+            elif variator == 'numr':
+                print('numr $range o=$ord')
+                print('Prepend and/or append a numbers from a range')
+                print('\trange start:stop    : The range to use')
+                print('\tord (pre|post|both) : Whether to prepend, append or both (optional)')
+            elif variator == 'numd':
+                print('numd $count o=$ord')
+                print('Prepend and/or append digits')
+                print('\tcount               : Up to how many digits to append')
+                print('\tord (pre|post|both) : Whether to prepend, append or both (optional)')
+            elif variator == 'caps':
+                print('caps mode')
+                print('Capitalize characters')
+                print('\t*|**|i [i...]       : Select capitalization strategy:')
+                print('\t    *               : Capitalize each letter individually')
+                print('\t    **              : Capitalize all combinations')
+                print('\t    i [i...]        : Capitalize specific indices')
+            print()
+
+
 def select_appender(order: str):
     def postfix_appender(source: bytes, appendix: bytes) -> Set[bytes]:
         return set([source + appendix])

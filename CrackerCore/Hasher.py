@@ -1,6 +1,5 @@
 import hashlib
 from typing import Dict, List, Set, Tuple
-from unittest import result
 
 from CrackerCore.HashGroup import HashGroup
 
