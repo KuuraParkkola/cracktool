@@ -51,5 +51,5 @@ def cli(config: Dict) -> None:
         logging.info("Process was aborted")
         worker_pool.stop()
 
-    output_file_name = export_results(config, hasher.matches, time()-start_time)
+    output_file_name = export_results(config, hasher.matches(), time()-start_time)
     logging.info(f'The process has been completed and results stored in file {output_file_name}')

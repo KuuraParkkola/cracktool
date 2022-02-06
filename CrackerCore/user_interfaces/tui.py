@@ -19,7 +19,7 @@ from CrackerCore.WorkerPool import WorkerPool
 
 
 def build_recent_words_table(words: List[str]):
-    columns = Columns(words, equal=True, expand=True)
+    columns = Columns(words, equal=True, expand=True, width=20)
     return columns
 
 
@@ -96,7 +96,7 @@ def tui(config: Dict) -> None:
     start_time = time()
     worker_pool.start()
 
-    recent_words = ['', '', '']
+    recent_words = ['' for _ in range(9)]
     dyn_ui = lambda: build_ui(progress, build_recent_words_table(recent_words), build_worker_table(worker_pool), build_match_table(hasher))
     with Live(dyn_ui(), refresh_per_second=1) as live:
         try:
